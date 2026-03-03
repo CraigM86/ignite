@@ -13,22 +13,13 @@ struct EnrichmentJob: Codable, Hashable {
     let contentName: String
     let job: String
     let status: Status
-    let enrichment: Enrichment
-    
-    enum CodingKeys: String, CodingKey {
-        case type
-        case contentName = "ContentName"
-        case job
-        case status
-        case enrichment
-    }
+    let enrichments: [Enrichment]
     
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.type == rhs.type &&
         lhs.contentName == rhs.contentName &&
         lhs.job == rhs.job &&
         lhs.status == rhs.status
-//        lhs.enrichment == rhs.enrichment
     }
     
     func hash(into hasher: inout Hasher) {
@@ -36,13 +27,12 @@ struct EnrichmentJob: Codable, Hashable {
         hasher.combine(contentName)
         hasher.combine(job)
         hasher.combine(status)
-//        hasher.combine(enrichment)
     }
     
 }
 
 enum ContentType: String, Codable {
-    case series
+    case series = "unknown"
     case episode
 }
 
@@ -69,6 +59,17 @@ extension ContentType {
             return .ignitePink
         case .episode:
             return .igniteOrange
+        }
+    }
+}
+
+extension ContentType {
+    var text: String {
+        switch self {
+        case .series:
+            "Series"
+        case .episode:
+            "Episode"
         }
     }
 }

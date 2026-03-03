@@ -12,7 +12,7 @@ struct SeriesView: View {
 
     @StateObject private var seriesViewModel: SeriesViewModel
     
-    @State private var leadActorsArray: [String] = []
+    @State private var leadActorsArray: [String]
     @State private var leadActors = ""
     @State private var leadActorsSelectedIndex = 0
     
@@ -37,11 +37,25 @@ struct SeriesView: View {
     
     init(series: EnrichmentJob, networkManager: NetworkManager) {
         self.series = series
+        let enrichment = series.enrichments.first
+        
+        let leadActorsValue = enrichment?.leadActors ?? ""
+        let actorsValue = enrichment?.actors ?? ""
+        let guestStarsValue = enrichment?.guestStars ?? ""
+        let directorsValue = enrichment?.directors ?? ""
+        let additionalSearchValue = enrichment?.additionalSearchTerm ?? ""
+        print("Additional search value: \(additionalSearchValue)")
+        
+        _leadActorsArray = State(initialValue: leadActorsValue.isEmpty ? [] : [leadActorsValue])
+        _actorsArray = State(initialValue: actorsValue.isEmpty ? [] : [actorsValue])
+        _guestStarsArray = State(initialValue: guestStarsValue.isEmpty ? [] : [guestStarsValue])
+        _directorsArray = State(initialValue: directorsValue.isEmpty ? [] : [directorsValue])
+        _additionalSearchArray = State(initialValue: additionalSearchValue.isEmpty ? [] : [additionalSearchValue])
+        
         _seriesViewModel = StateObject(wrappedValue: SeriesViewModel(networkManager: networkManager))
     }
     
     var body: some View {
-        GeometryReader { geometry in
             ZStack {
                 ScrollView {
                     VStack {
@@ -60,7 +74,8 @@ struct SeriesView: View {
                             storedArray: $leadActorsArray,
                             selectedIndex: $leadActorsSelectedIndex,
                             bedrockField: $leadActors,
-                            height: 100
+                            height: 140,
+                            first: true
                         )
                         
                         TextCompareView(
@@ -68,7 +83,7 @@ struct SeriesView: View {
                             storedArray: $actorsArray,
                             selectedIndex: $actorsSelectedIndex,
                             bedrockField: $actors,
-                            height: 100
+                            height: 140
                         )
                         
                         TextCompareView(
@@ -76,7 +91,7 @@ struct SeriesView: View {
                             storedArray: $guestStarsArray,
                             selectedIndex: $guestStarsSelectedIndex,
                             bedrockField: $guestStars,
-                            height: 100
+                            height: 140
                         )
                         
                         TextCompareView(
@@ -84,7 +99,7 @@ struct SeriesView: View {
                             storedArray: $directorsArray,
                             selectedIndex: $directorsSelectedIndex,
                             bedrockField: $directors,
-                            height: 100
+                            height: 140
                         )
                         
                         TextCompareView(
@@ -92,7 +107,7 @@ struct SeriesView: View {
                             storedArray: $additionalSearchArray,
                             selectedIndex: $additionalSearchSelectedIndex,
                             bedrockField: $additionalSearch,
-                            height: 100
+                            height: 140
                         )
                         
                         if let seriesMetadata = seriesViewModel.seriesMetadata {
@@ -105,13 +120,13 @@ struct SeriesView: View {
                             ExistingFieldsView(
                                 header: "Extra short synopsis",
                                 text: seriesMetadata.extraShortSynopsis,
-                                height: 80
+                                height: 140
                             )
                             
                             ExistingFieldsView(
                                 header: "Short synopsis",
                                 text: seriesMetadata.shortSynopsis,
-                                height: 80
+                                height: 140
                             )
                             
                             ExistingFieldsView(
@@ -123,17 +138,15 @@ struct SeriesView: View {
                             ExistingFieldsView(
                                 header: "Background Image",
                                 text: seriesMetadata.backgroundImageLogo.url,
-                                height: 80
+                                height: 140
                             )
                         }
                         
                     }
-                    .frame(maxWidth: geometry.size.width * 0.8)
                 }
                 .onAppear {
                     seriesViewModel.getSeries(seriesId: series.job)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(.igniteBlack)
                 .overlay(alignment: .bottomTrailing) {
                     VStack(spacing: 32) {
@@ -148,6 +161,7 @@ struct SeriesView: View {
                                     Circle()
                                         .fill(.ignitePink)
                                 )
+                            
                         }
                         
                         Button {
@@ -159,28 +173,26 @@ struct SeriesView: View {
                                 .frame(width: 54, height: 54)
                                 .background(
                                     Circle()
-                                        .fill(.igniteOrange)
+                                        .fill(.igniteGreen)
                                 )
+                            
                         }
                     }
                     .padding(44)
                 }
                 
                 if isLoading {
-                    VStack(spacing: 24) {
+                    VStack(spacing: 12) {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .ignitePink))
                             .scaleEffect(2)
                         
                         Text("Loading...")
                             .foregroundStyle(.ignitePink)
-                            .font(.headline)
                     }
-                    .frame(width: 220, height: 200)
-                    .background(.igniteBlack.opacity(0.8))
-                    .cornerRadius(20)
+                    .frame(width: 400, height: 400)
+                    .background(.igniteBlack.opacity(0.5))
                 }
             }
-        }
     }
 }

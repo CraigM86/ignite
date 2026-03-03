@@ -58,7 +58,6 @@ struct EnrichmentListingsView: View {
     
     var body: some View {
         NavigationStack {
-            GeometryReader { geometry in
                 VStack {
                     Text("SEBn+")
                         .font(.system(size: 98, weight: .bold))
@@ -74,9 +73,6 @@ struct EnrichmentListingsView: View {
                         HStack {
                             Spacer()
                             Picker("Options", selection: $selectedOption) {
-                                //                        Text("All").tag(0)
-                                //                        Text("Series").tag(1)
-                                //                        Text("Episodes").tag(2)
                                 ForEach(ContentFilter.allCases, id: \.self) { filter in
                                     Text(filter.rawValue)
                                         .tag(filter)
@@ -95,7 +91,7 @@ struct EnrichmentListingsView: View {
                                         Text(listing.job)
                                             .frame(width: 180, alignment: .leading)
                                         
-                                        Text(listing.type.rawValue)
+                                        Text(listing.type.text)
                                             .frame(width: 180, alignment: .leading)
                                             .foregroundStyle(listing.type.color)
                                         
@@ -111,16 +107,16 @@ struct EnrichmentListingsView: View {
                             switch item.type {
                             case .episode:
                                 EpisodeView(episode: item, networkManager: networkManager)
+                                
                             case .series:
                                 SeriesView(series: item, networkManager: networkManager)
                             }
                         }
                     }
-                    .frame(width: geometry.size.width * 0.9)
                 }
+                .padding(.horizontal, 48)
                 .frame(maxWidth: .infinity)
                 .background(.igniteBlack)
-            }
         }
         .onAppear {
             Task {
