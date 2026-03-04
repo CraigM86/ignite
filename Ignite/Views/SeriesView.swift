@@ -120,6 +120,11 @@ struct SeriesView: View {
                             bedrockField: $seriesViewModel.additionalSearch,
                             height: 600
                         )
+                        
+                        VStack {
+                            Text("Validation")
+                            Text("Confidence score: \(seriesViewModel.validator.)")
+                        }
                     }
                 }
                 .onAppear {
@@ -146,7 +151,14 @@ struct SeriesView: View {
                         }
                         
                         Button {
-                            print("button tapped")
+                            seriesViewModel.approveJob(
+                                seriesId: series.job,
+                                leadActors: leadActorsArray[leadActorsSelectedIndex],
+                                actors: actorsArray[actorsSelectedIndex],
+                                guestStars: guestStarsArray[guestStarsSelectedIndex],
+                                directors: directorsArray[directorsSelectedIndex],
+                                additionalSearch: additionalSearchArray[additionalSearchSelectedIndex]
+                            )
                         } label: {
                             Image(systemName: "icloud.and.arrow.up")
                                 .foregroundStyle(.white)
@@ -172,6 +184,7 @@ struct SeriesView: View {
                     }
                     .frame(width: 400, height: 400)
                     .background(.igniteBlack.opacity(0.8))
+                    .cornerRadius(24)
                 }
             }
     }

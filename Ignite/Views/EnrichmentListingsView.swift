@@ -90,7 +90,7 @@ struct EnrichmentListingsView: View {
                                     HStack {
                                         Text(listing.contentName)
                                             .fontWeight(.bold)
-                                            .frame(width: 270, alignment: .leading)
+                                            .frame(width: 320, alignment: .leading)
                                         
                                         Text(listing.job)
                                             .font(.body)

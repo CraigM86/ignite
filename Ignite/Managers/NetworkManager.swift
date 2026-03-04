@@ -12,7 +12,7 @@ protocol NetworkManagerProtocol {
     func fetchEnrichments() async throws -> [EnrichmentJob]
     func fetchEnrichment(jobId: String) async throws -> EnrichmentJob?
     func retry(jobId: String, title: String) async throws -> RetryResponse
-    func approvedJob(jobId: String) async throws
+    func approveJob(jobId: String, body: [String: Any]) async throws
     func fetchEpisodeMetadata(episodeId: String) async throws -> ExistingMetadata
     func fetchSeriesMetaData(seriesId: String) async throws -> ExistingMetadata
     func createURL(url: URL, path: String, urlQueryItems: [URLQueryItem]?) throws -> URL
@@ -101,7 +101,7 @@ class NetworkManager: NetworkManagerProtocol, ObservableObject {
         }
     }
     
-    func approvedJob(jobId: String) async throws {
+    func approveJob(jobId: String, body: [String: Any]) async throws {
         let path = "jobs/\(jobId)/approve"
         let url = try createURL(url: enrichmentBaseUrl, path: path)
         let request = try createURLRequest(url: url, method: .post)

@@ -116,6 +116,20 @@ struct TextCompareView: View {
                         }
                     }
             }
+            
+            HStack {
+                Text("Confidence Score: 0.5")
+                    .font(.title3)
+                    .foregroundStyle(.igniteSoftPink)
+                    .padding(.trailing, 24)
+                
+                Text("LLM: opus-mt-001")
+                    .font(.title3)
+                    .foregroundStyle(.igniteWhite.opacity(0.5))
+                
+                Spacer()
+            }
+            .padding()
         }
         .padding(.horizontal, 48)
         .padding(.vertical, 24)

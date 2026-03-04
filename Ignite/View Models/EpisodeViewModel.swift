@@ -53,4 +53,17 @@ class EpisodeViewModel: ObservableObject {
             isLoading = false
         }
     }
+    
+    func approvedJob(episodeId: String, genres: [String], shortSynopsis: String) {
+        let body: [String: Any] = [
+            "genre": genres,
+            "shortSynopsis": shortSynopsis
+        ]
+        
+        Task {
+            
+            try await networkManager.approveJob(jobId: episodeId, body: body)
+        }
+        
+    }
 }

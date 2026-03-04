@@ -60,7 +60,7 @@ struct EpisodeView: View {
                         storedArray: $shortSynopsisArray,
                         selectedIndex: $shortSynopsisSelectedIndex,
                         bedrockField: $episodeViewModel.shortSynopsis,
-                        height: 140,
+                        height: 200,
                         first: true
                     )
                     
@@ -107,7 +107,11 @@ struct EpisodeView: View {
                     }
                     
                     Button {
-                        print("button tapped")
+                        episodeViewModel.approvedJob(
+                            episodeId: episode.job,
+                            genres: genreArray[genreSelectedIndex],
+                            shortSynopsis: shortSynopsisArray[shortSynopsisSelectedIndex]
+                        )
                     } label: {
                         Image(systemName: "icloud.and.arrow.up")
                             .foregroundStyle(.white)
@@ -134,6 +138,7 @@ struct EpisodeView: View {
                 }
                 .frame(width: 400, height: 400)
                 .background(.igniteBlack.opacity(0.5))
+                .cornerRadius(24)
             }
         }
     }

@@ -17,6 +17,7 @@ class SeriesViewModel: ObservableObject {
     @Published var guestStars = ""
     @Published var directors = ""
     @Published var additionalSearch = ""
+    @Published var validator: Validator?
 
     let networkManager: NetworkManager
     
@@ -40,7 +41,7 @@ class SeriesViewModel: ObservableObject {
                 let leadActorsValue = enrichmentJob?.enrichments
                     .first { $0.property == .leadActors }
                     .map { $0.value.joined }
-                
+s t
                 let actorsValue = enrichmentJob?.enrichments
                     .first { $0.property == .actors }
                     .map { $0.value.joined }
@@ -57,6 +58,8 @@ class SeriesViewModel: ObservableObject {
                     .first { $0.property == .additionalSearchTerm }
                     .map { $0.value.joined }
                 
+                let validatorValue = enrichmentJob?.validator
+                
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
                     leadActors = leadActorsValue ?? ""
@@ -64,11 +67,33 @@ class SeriesViewModel: ObservableObject {
                     guestStars = guestStarsValue ?? ""
                     directors = directorsValue ?? ""
                     additionalSearch = additionalSearchValue ?? ""
+                    validator = validatorValue
                 }
             } catch {
                 
             }
             isLoading = false
+        }
+    }
+    
+    func approveJob(
+        seriesId: String,
+        leadActors: String,
+        actors: String,
+        guestStars: String,
+        directors: String,
+        additionalSearch: String
+    ) {
+        let body: [String: Any] = [
+            "leadActors": leadActors,
+            "actors": actors,
+            "guestStars": guestStars,
+            "directors": directors,
+            "additionalSearch": additionalSearch
+        ]
+        
+        Task {
+            try await networkManager.approveJob(jobId: seriesId, body: body)
         }
     }
 }
