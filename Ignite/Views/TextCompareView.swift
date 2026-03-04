@@ -58,7 +58,7 @@ struct TextCompareView: View {
             
             HStack(spacing: 48) {
                 TextEditor(text: $bedrockField)
-                    .font(.title3)
+                    .font(.title2)
                     .foregroundStyle(.ignitePink)
                     .scrollContentBackground(.hidden)
                     .padding(6)

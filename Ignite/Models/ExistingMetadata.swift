@@ -7,13 +7,14 @@
 
 import Foundation
 
-struct ExistingMetadata: Decodable {
+struct ExistingMetadata: Decodable, Equatable {
     let mediaType: String
     let title: String
-    let extraShortSynopsis: String
+    let seriesTitle: String?
     let shortSynopsis: String
-    let classification: String
-    let backgroundImageLogo: BackgroundImageLogo
+    let longSynopsis: String
+    let classification: String?
+//    let backgroundImageLogo: BackgroundImageLogo
     let genre: [String]
     let combinedGenres: [String]
 }

@@ -13,44 +13,48 @@ struct SeriesView: View {
     @StateObject private var seriesViewModel: SeriesViewModel
     
     @State private var leadActorsArray: [String]
-    @State private var leadActors = ""
     @State private var leadActorsSelectedIndex = 0
     
     @State private var actorsArray: [String] = []
-    @State private var actors = ""
     @State private var actorsSelectedIndex = 0
     
     @State private var guestStarsArray: [String] = []
-    @State private var guestStars = ""
     @State private var guestStarsSelectedIndex = 0
     
     @State private var directorsArray: [String] = []
-    @State private var directors = ""
     @State private var directorsSelectedIndex = 0
     
     @State private var additionalSearchArray: [String] = []
-    @State private var additionalSearch = ""
     @State private var additionalSearchSelectedIndex = 0
-    
-    @State private var isLoading = false
-    
     
     init(series: EnrichmentJob, networkManager: NetworkManager) {
         self.series = series
-        let enrichment = series.enrichments.first
+     
+        let leadActorsValue = series.enrichments
+            .filter { $0.property == .leadActors }
+            .flatMap { $0.value.values }
         
-        let leadActorsValue = enrichment?.leadActors ?? ""
-        let actorsValue = enrichment?.actors ?? ""
-        let guestStarsValue = enrichment?.guestStars ?? ""
-        let directorsValue = enrichment?.directors ?? ""
-        let additionalSearchValue = enrichment?.additionalSearchTerm ?? ""
-        print("Additional search value: \(additionalSearchValue)")
+        let actorsValue = series.enrichments
+            .filter { $0.property == .actors }
+            .flatMap { $0.value.values }
         
-        _leadActorsArray = State(initialValue: leadActorsValue.isEmpty ? [] : [leadActorsValue])
-        _actorsArray = State(initialValue: actorsValue.isEmpty ? [] : [actorsValue])
-        _guestStarsArray = State(initialValue: guestStarsValue.isEmpty ? [] : [guestStarsValue])
-        _directorsArray = State(initialValue: directorsValue.isEmpty ? [] : [directorsValue])
-        _additionalSearchArray = State(initialValue: additionalSearchValue.isEmpty ? [] : [additionalSearchValue])
+        let guestStarsValue = series.enrichments
+            .filter { $0.property == .guestStars }
+            .flatMap { $0.value.values }
+        
+        let directorsValue = series.enrichments
+            .filter { $0.property == .directors }
+            .flatMap { $0.value.values }
+        
+        let additionalSearchValue = series.enrichments
+            .filter { $0.property == .additionalSearchTerm }
+            .flatMap { $0.value.values }
+        
+        _leadActorsArray = State(initialValue: leadActorsValue)
+        _actorsArray = State(initialValue: actorsValue)
+        _guestStarsArray = State(initialValue: guestStarsValue)
+        _directorsArray = State(initialValue: directorsValue)
+        _additionalSearchArray = State(initialValue: additionalSearchValue)
         
         _seriesViewModel = StateObject(wrappedValue: SeriesViewModel(networkManager: networkManager))
     }
@@ -69,11 +73,18 @@ struct SeriesView: View {
                                 )
                             )
                         
+                        if let seriesMetadata = seriesViewModel.seriesMetadata {
+                            Text((seriesMetadata.seriesTitle ?? "") + seriesMetadata.title)
+                                .font(.system(size: 32, weight: .bold))
+                                .foregroundStyle(.igniteWhite)
+                                .padding()
+                        }
+                        
                         TextCompareView(
                             header: "Lead Actors",
                             storedArray: $leadActorsArray,
                             selectedIndex: $leadActorsSelectedIndex,
-                            bedrockField: $leadActors,
+                            bedrockField: $seriesViewModel.leadActors,
                             height: 140,
                             first: true
                         )
@@ -82,7 +93,7 @@ struct SeriesView: View {
                             header: "Actors",
                             storedArray: $actorsArray,
                             selectedIndex: $actorsSelectedIndex,
-                            bedrockField: $actors,
+                            bedrockField: $seriesViewModel.actors,
                             height: 140
                         )
                         
@@ -90,7 +101,7 @@ struct SeriesView: View {
                             header: "Guest Stars",
                             storedArray: $guestStarsArray,
                             selectedIndex: $guestStarsSelectedIndex,
-                            bedrockField: $guestStars,
+                            bedrockField: $seriesViewModel.guestStars,
                             height: 140
                         )
                         
@@ -98,7 +109,7 @@ struct SeriesView: View {
                             header: "Directors",
                             storedArray: $directorsArray,
                             selectedIndex: $directorsSelectedIndex,
-                            bedrockField: $directors,
+                            bedrockField: $seriesViewModel.directors,
                             height: 140
                         )
                         
@@ -106,42 +117,9 @@ struct SeriesView: View {
                             header: "Additional Search",
                             storedArray: $additionalSearchArray,
                             selectedIndex: $additionalSearchSelectedIndex,
-                            bedrockField: $additionalSearch,
-                            height: 140
+                            bedrockField: $seriesViewModel.additionalSearch,
+                            height: 600
                         )
-                        
-                        if let seriesMetadata = seriesViewModel.seriesMetadata {
-                            ExistingFieldsView(
-                                header: "Title",
-                                text: seriesMetadata.title,
-                                height: 50
-                            )
-                            
-                            ExistingFieldsView(
-                                header: "Extra short synopsis",
-                                text: seriesMetadata.extraShortSynopsis,
-                                height: 140
-                            )
-                            
-                            ExistingFieldsView(
-                                header: "Short synopsis",
-                                text: seriesMetadata.shortSynopsis,
-                                height: 140
-                            )
-                            
-                            ExistingFieldsView(
-                                header: "Classification",
-                                text: seriesMetadata.classification,
-                                height: 50
-                            )
-                            
-                            ExistingFieldsView(
-                                header: "Background Image",
-                                text: seriesMetadata.backgroundImageLogo.url,
-                                height: 140
-                            )
-                        }
-                        
                     }
                 }
                 .onAppear {
@@ -151,7 +129,11 @@ struct SeriesView: View {
                 .overlay(alignment: .bottomTrailing) {
                     VStack(spacing: 32) {
                         Button {
-                            isLoading = true
+                            seriesViewModel.retryAndFetchSeries(
+                                seriesId: series.job,
+                                title: seriesViewModel.seriesMetadata?.title
+                                ?? series.contentName
+                            )
                         } label: {
                             Image(systemName: "wand.and.stars")
                                 .foregroundStyle(.white)
@@ -161,7 +143,6 @@ struct SeriesView: View {
                                     Circle()
                                         .fill(.ignitePink)
                                 )
-                            
                         }
                         
                         Button {
@@ -175,13 +156,12 @@ struct SeriesView: View {
                                     Circle()
                                         .fill(.igniteGreen)
                                 )
-                            
                         }
                     }
                     .padding(44)
                 }
                 
-                if isLoading {
+                if seriesViewModel.isLoading {
                     VStack(spacing: 12) {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .ignitePink))
@@ -191,7 +171,7 @@ struct SeriesView: View {
                             .foregroundStyle(.ignitePink)
                     }
                     .frame(width: 400, height: 400)
-                    .background(.igniteBlack.opacity(0.5))
+                    .background(.igniteBlack.opacity(0.8))
                 }
             }
     }

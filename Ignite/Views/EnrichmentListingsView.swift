@@ -88,14 +88,21 @@ struct EnrichmentListingsView: View {
                             ForEach(filteredListings, id: \.job) { listing in
                                 NavigationLink(value: listing) {
                                     HStack {
+                                        Text(listing.contentName)
+                                            .fontWeight(.bold)
+                                            .frame(width: 270, alignment: .leading)
+                                        
                                         Text(listing.job)
+                                            .font(.body)
                                             .frame(width: 180, alignment: .leading)
+                                            .foregroundStyle(.opacity(0.5))
                                         
                                         Text(listing.type.text)
-                                            .frame(width: 180, alignment: .leading)
+                                            .frame(width: 160, alignment: .leading)
                                             .foregroundStyle(listing.type.color)
                                         
                                         Text("Status: \(listing.status.text)")
+                                            .foregroundStyle(.opacity(0.5))
                                         
                                         Spacer()
                                     }

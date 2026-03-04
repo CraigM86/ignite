@@ -37,6 +37,6 @@ struct ExistingFieldsView: View {
                 Spacer()
             }
         }
-        .padding()
+        .padding(44)
     }
 }
