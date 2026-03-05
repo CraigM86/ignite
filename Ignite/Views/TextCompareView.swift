@@ -12,14 +12,16 @@ struct TextCompareView: View {
         @Binding var storedArray: [String]
         @Binding var selectedIndex: Int
         @Binding var bedrockField: String
+        @Binding var enrichment: Enrichment?
         let height: CGFloat
         let first: Bool
-
+        
         init(
             header: String,
             storedArray: Binding<[String]>,
             selectedIndex: Binding<Int>,
             bedrockField: Binding<String>,
+            enrichment: Binding<Enrichment?>,
             height: CGFloat,
             first: Bool = false
         ) {
@@ -27,6 +29,7 @@ struct TextCompareView: View {
             self._storedArray = storedArray
             self._selectedIndex = selectedIndex
             self._bedrockField = bedrockField
+            self._enrichment = enrichment
             self.height = height
             self.first = first
         }
@@ -57,6 +60,7 @@ struct TextCompareView: View {
             }
             
             HStack(spacing: 48) {
+                VStack {
                 TextEditor(text: $bedrockField)
                     .font(.title2)
                     .foregroundStyle(.ignitePink)
@@ -80,6 +84,8 @@ struct TextCompareView: View {
                                 .padding(8)
                         }
                     }
+                    Spacer()
+                }
                 
                 Text(storedArray.isEmpty ? "" : storedArray[selectedIndex])
                     .font(.title2)
@@ -118,12 +124,12 @@ struct TextCompareView: View {
             }
             
             HStack {
-                Text("Confidence Score: 0.5")
-                    .font(.title3)
-                    .foregroundStyle(.igniteSoftPink)
-                    .padding(.trailing, 24)
+//                Text("Confidence Score: \(String(format: "%.2f", enrichment?.aggregatedConfidence ?? 0))")
+//                    .font(.title3)
+//                    .foregroundStyle(.igniteSoftPink)
+//                    .padding(.trailing, 24)
                 
-                Text("LLM: opus-mt-001")
+                Text("LLM: \(enrichment?.source ?? "")")
                     .font(.title3)
                     .foregroundStyle(.igniteWhite.opacity(0.5))
                 

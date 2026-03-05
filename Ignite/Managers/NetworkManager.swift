@@ -104,7 +104,7 @@ class NetworkManager: NetworkManagerProtocol, ObservableObject {
     func approveJob(jobId: String, body: [String: Any]) async throws {
         let path = "jobs/\(jobId)/approve"
         let url = try createURL(url: enrichmentBaseUrl, path: path)
-        let request = try createURLRequest(url: url, method: .post)
+        let request = try createURLRequest(url: url, method: .post, body: body)
         let (data, response) = try await session.data(for: request)
         
         guard (response as? HTTPURLResponse)?.statusCode == 200 else {

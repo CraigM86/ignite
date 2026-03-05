@@ -21,17 +21,17 @@ struct EpisodeView: View {
     init(episode: EnrichmentJob, networkManager: NetworkManager) {
         self.episode = episode
         
-        let shortSynopsisValue = episode.enrichments
-            .filter { $0.property == .shortSynopsis }
-            .flatMap { $0.value.values }
-        
-        let genreValue = episode.enrichments
-            .filter { $0.property == .genre }
-            .flatMap { $0.value.values }
-        
-        _shortSynopsisArray = State(initialValue: shortSynopsisValue)
-        _genreArray = State(initialValue: [genreValue])
-        
+//        let shortSynopsisValue = episode.enrichments
+//            .filter { $0.property == .shortSynopsis }
+//            .flatMap { $0.value.values }
+//        
+//        let genreValue = episode.enrichments
+//            .filter { $0.property == .genre }
+//            .flatMap { $0.value.values }
+//        
+//        _shortSynopsisArray = State(initialValue: shortSynopsisValue)
+//        _genreArray = State(initialValue: [genreValue])
+//        
         _episodeViewModel = StateObject(wrappedValue: EpisodeViewModel(networkManager: networkManager))
     }
     
@@ -60,29 +60,34 @@ struct EpisodeView: View {
                         storedArray: $shortSynopsisArray,
                         selectedIndex: $shortSynopsisSelectedIndex,
                         bedrockField: $episodeViewModel.shortSynopsis,
+                        enrichment: $episodeViewModel.shortSynopsisEnrichment,
                         height: 200,
                         first: true
                     )
                     
                     TextCompareArrayView(
-                        
                         header: "Genres",
                         storedGenreArray: $genreArray,
                         selectedIndex: $genreSelectedIndex,
                         bedrockField: $episodeViewModel.genre,
+                        enrichment: $episodeViewModel.genreEnrichment,
                         height: 200
                     )
                 }
             }
             .onAppear {
                 Task {
+                    setupAIFields()
                     episodeViewModel.fetchEpisode(episodeId: episode.job)
                 }
             }
             .onChange(of: episodeViewModel.episodeMetadata) { metadata in
-                if let shortSynopsis = metadata?.shortSynopsis {
-                    shortSynopsisArray.append(shortSynopsis)
+                if let metadata = metadata {
+                    shortSynopsisArray.append(metadata.shortSynopsis)
                     shortSynopsisSelectedIndex = shortSynopsisArray.count - 1
+                    
+                    genreArray.append(metadata.genre)
+                    genreSelectedIndex = genreArray.count - 1
                 }
             }
             .background(.igniteBlack)
@@ -131,15 +136,41 @@ struct EpisodeView: View {
                 VStack(spacing: 12) {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .ignitePink))
-                        .scaleEffect(2)
+                        .scaleEffect(3)
+                        .padding()
                     
                     Text("Loading...")
                         .foregroundStyle(.ignitePink)
                 }
                 .frame(width: 400, height: 400)
-                .background(.igniteBlack.opacity(0.5))
+                .background(.igniteDarkGrey)
                 .cornerRadius(24)
             }
         }
+        
+        if let success = episodeViewModel.approvalSuccess {
+            if success {
+                Text("Approval succeeded!")
+                    .foregroundColor(.green)
+                    .padding()
+            } else {
+                Text("Approval failed: \(episodeViewModel.approvalErrorMessage ?? "Unknown error")")
+                    .foregroundColor(.red)
+                    .padding()
+            }
+        }
+    }
+    
+    private func setupAIFields() {
+        let shortSynopsisValue = episode.enrichments
+            .first { $0.property == .shortSynopsis }
+            .map { $0.value.joined }
+        
+        let genreValue = episode.enrichments
+            .first { $0.property == .genre }
+            .map { $0.value.values }
+        
+        episodeViewModel.shortSynopsis = shortSynopsisValue ?? ""
+        episodeViewModel.genre = genreValue ?? []
     }
 }

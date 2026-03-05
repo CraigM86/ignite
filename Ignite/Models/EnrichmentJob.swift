@@ -14,6 +14,7 @@ struct EnrichmentJob: Codable, Hashable {
     let job: String
     let status: Status
     let enrichments: [Enrichment]
+    let aggregatedConfidence: Double?
     let validator: Validator
     
     static func == (lhs: Self, rhs: Self) -> Bool {
@@ -51,6 +52,7 @@ struct Enrichment: Codable {
 
 struct Validator: Codable {
     let inconsistencies: [String]
+    let confidenceScore: Double?
     let source: String
 }
 

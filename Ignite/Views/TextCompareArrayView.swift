@@ -12,6 +12,7 @@ struct TextCompareArrayView: View {
     @Binding var storedGenreArray: [[String]]
     @Binding var selectedIndex: Int
     @Binding var bedrockField: [String]
+    @Binding var enrichment: Enrichment?
     let height: CGFloat
     
     var body: some View {
@@ -92,6 +93,20 @@ struct TextCompareArrayView: View {
                         }
                     }
             }
+            
+            HStack {
+//                Text("Confidence Score: \(String(format: "%.2f", enrichment?.aggregatedConfidence ?? 0))")
+//                    .font(.title3)
+//                    .foregroundStyle(.igniteSoftPink)
+//                    .padding(.trailing, 24)
+                
+                Text("LLM: \(enrichment?.source ?? "")")
+                    .font(.title3)
+                    .foregroundStyle(.igniteWhite.opacity(0.5))
+                
+                Spacer()
+            }
+            .padding()
             
         }
         .padding(.horizontal, 48)

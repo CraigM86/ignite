@@ -12,7 +12,7 @@ struct SeriesView: View {
 
     @StateObject private var seriesViewModel: SeriesViewModel
     
-    @State private var leadActorsArray: [String]
+    @State private var leadActorsArray: [String] = []
     @State private var leadActorsSelectedIndex = 0
     
     @State private var actorsArray: [String] = []
@@ -30,31 +30,6 @@ struct SeriesView: View {
     init(series: EnrichmentJob, networkManager: NetworkManager) {
         self.series = series
      
-        let leadActorsValue = series.enrichments
-            .filter { $0.property == .leadActors }
-            .flatMap { $0.value.values }
-        
-        let actorsValue = series.enrichments
-            .filter { $0.property == .actors }
-            .flatMap { $0.value.values }
-        
-        let guestStarsValue = series.enrichments
-            .filter { $0.property == .guestStars }
-            .flatMap { $0.value.values }
-        
-        let directorsValue = series.enrichments
-            .filter { $0.property == .directors }
-            .flatMap { $0.value.values }
-        
-        let additionalSearchValue = series.enrichments
-            .filter { $0.property == .additionalSearchTerm }
-            .flatMap { $0.value.values }
-        
-        _leadActorsArray = State(initialValue: leadActorsValue)
-        _actorsArray = State(initialValue: actorsValue)
-        _guestStarsArray = State(initialValue: guestStarsValue)
-        _directorsArray = State(initialValue: directorsValue)
-        _additionalSearchArray = State(initialValue: additionalSearchValue)
         
         _seriesViewModel = StateObject(wrappedValue: SeriesViewModel(networkManager: networkManager))
     }
@@ -85,7 +60,8 @@ struct SeriesView: View {
                             storedArray: $leadActorsArray,
                             selectedIndex: $leadActorsSelectedIndex,
                             bedrockField: $seriesViewModel.leadActors,
-                            height: 140,
+                            enrichment: $seriesViewModel.leadActorsEnrichment,
+                            height: 220,
                             first: true
                         )
                         
@@ -94,7 +70,8 @@ struct SeriesView: View {
                             storedArray: $actorsArray,
                             selectedIndex: $actorsSelectedIndex,
                             bedrockField: $seriesViewModel.actors,
-                            height: 140
+                            enrichment: $seriesViewModel.actorsEnrichment,
+                            height: 220
                         )
                         
                         TextCompareView(
@@ -102,7 +79,8 @@ struct SeriesView: View {
                             storedArray: $guestStarsArray,
                             selectedIndex: $guestStarsSelectedIndex,
                             bedrockField: $seriesViewModel.guestStars,
-                            height: 140
+                            enrichment: $seriesViewModel.guestStarsEnrichment,
+                            height: 220
                         )
                         
                         TextCompareView(
@@ -110,7 +88,8 @@ struct SeriesView: View {
                             storedArray: $directorsArray,
                             selectedIndex: $directorsSelectedIndex,
                             bedrockField: $seriesViewModel.directors,
-                            height: 140
+                            enrichment: $seriesViewModel.directorsEnrichment,
+                            height: 220
                         )
                         
                         TextCompareView(
@@ -118,17 +97,56 @@ struct SeriesView: View {
                             storedArray: $additionalSearchArray,
                             selectedIndex: $additionalSearchSelectedIndex,
                             bedrockField: $seriesViewModel.additionalSearch,
-                            height: 600
+                            enrichment: $seriesViewModel.additionalSearchEnrichment,
+                            height: 800
                         )
                         
-                        VStack {
-                            Text("Validation")
-                            Text("Confidence score: \(seriesViewModel.validator.)")
+                        HStack {
+                            
+                            VStack(alignment: .leading) {
+                                Text("Validation Agent")
+                                    .font(.title)
+                                    .fontWeight(.bold)
+                                    .padding(.bottom)
+                                
+                                Text("Confidence score: \(String(format: "%.2f", seriesViewModel.validator?.confidenceScore ?? 0.0))")
+                                    .font(.title3)
+                                    .padding(.bottom)
+                                
+                                
+                                Text("Source: \(seriesViewModel.validator?.source ?? "Unknown")")
+                                    .font(.title3)
+                                    .padding(.bottom)
+                                
+                                Text("Inconsistencies")
+                                    .font(.title3)
+                                    .padding(.bottom)
+                                
+                                if let inconsistencies = seriesViewModel.validator?.inconsistencies {
+                                    ForEach(inconsistencies, id: \.self) { inconsistency in
+                                        Text(inconsistency)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 48)
+                            .padding(.vertical, 24)
+                            
+                            Spacer()
                         }
                     }
                 }
                 .onAppear {
+                    setupAIFields()
                     seriesViewModel.getSeries(seriesId: series.job)
+                }
+                .onChange(of: seriesViewModel.seriesMetadata) { metadata in
+                    if let metadata {
+                        print("Metadata")
+                        leadActorsArray.append(metadata.leadActors ?? "")
+                        actorsArray.append(metadata.actors ?? "")
+                        guestStarsArray.append(metadata.guestStars ?? "")
+                        directorsArray.append(metadata.directors ?? "")
+                    }
                 }
                 .background(.igniteBlack)
                 .overlay(alignment: .bottomTrailing) {
@@ -177,15 +195,56 @@ struct SeriesView: View {
                     VStack(spacing: 12) {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .ignitePink))
-                            .scaleEffect(2)
+                            .scaleEffect(3)
+                            .padding()
                         
                         Text("Loading...")
                             .foregroundStyle(.ignitePink)
                     }
                     .frame(width: 400, height: 400)
-                    .background(.igniteBlack.opacity(0.8))
+                    .background(.igniteDarkGrey)
                     .cornerRadius(24)
                 }
+                
+                if let success = seriesViewModel.approvalSuccess {
+                    if success {
+                        Text("Approval succeeded!")
+                            .foregroundColor(.green)
+                            .padding()
+                    } else {
+                        Text("Approval failed: \(seriesViewModel.approvalErrorMessage ?? "Unknown error")")
+                            .foregroundColor(.red)
+                            .padding()
+                    }
+                }
             }
+    }
+    
+    private func setupAIFields() {
+        let leadActorsValue = series.enrichments
+            .first { $0.property == .leadActors }
+            .map { $0.value.joined }
+        
+        let actorsValue = series.enrichments
+            .first { $0.property == .actors }
+            .map { $0.value.joined }
+        
+        let guestStarsValue = series.enrichments
+            .first { $0.property == .guestStars }
+            .map { $0.value.joined }
+        
+        let directorsValue = series.enrichments
+            .first { $0.property == .directors }
+            .map { $0.value.joined }
+        
+        let additionalSearchValue = series.enrichments
+            .first { $0.property == .additionalSearchTerm }
+            .map { $0.value.joined }
+        
+        seriesViewModel.leadActors = leadActorsValue ?? ""
+        seriesViewModel.actors = actorsValue ?? ""
+        seriesViewModel.guestStars = guestStarsValue ?? ""
+        seriesViewModel.directors = directorsValue ?? ""
+        seriesViewModel.additionalSearch = additionalSearchValue ?? ""
     }
 }
